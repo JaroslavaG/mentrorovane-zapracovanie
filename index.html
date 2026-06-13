@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NP Finančné stimuly pre zamestnanosť – Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0E1F38;--navy-mid:#1A3352;--navy-light:#2B4A6F;
+  --gold:#D4A843;--gold-light:#EBC96A;--gold-pale:#FDF3DC;
+  --teal:#1A6B5A;--teal-light:#E6F4F1;
+  --slate:#E8EDF5;--slate-mid:#C8D4E8;
+  --red:#C0392B;--red-light:#FDEAEA;
+  --text:#0E1F38;--text-mid:#3D5166;--text-muted:#7A8FA8;
+  --white:#FFFFFF;--border:#D8E2F0;
+  --radius:10px;--shadow:0 4px 24px rgba(14,31,56,0.10);
+}
+body{font-family:'Inter',sans-serif;background:#F0F4FB;color:var(--text);min-height:100vh;}
+
+/* ── TOP HEADER ── */
+.top-header{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;flex-wrap:wrap;gap:8px;}
+.logo{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--white);letter-spacing:-0.3px;}
+.logo span{color:var(--gold);}
+.header-right{display:flex;align-items:center;gap:12px;}
+.badge-eu{background:rgba(212,168,67,0.18);border:1px solid rgba(212,168,67,0.4);color:var(--gold-light);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+.badge-date{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;}
+.badge-date a{color:var(--gold-light);text-decoration:none;font-weight:600;}
+.badge-date a:hover{text-decoration:underline;}
+.footer-credit{background:var(--navy);color:rgba(255,255,255,0.55);font-size:10.5px;text-align:center;padding:16px 24px;line-height:1.7;}
+.footer-credit a{color:var(--gold-light);text-decoration:none;font-weight:600;}
+.footer-credit a:hover{text-decoration:underline;}
+
+/* ── HERO STRIP ── */
+.hero{background:linear-gradient(135deg,var(--navy-mid) 0%,var(--navy-light) 100%);padding:28px 32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.hero-main{flex:1;min-width:240px;}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.hero-title{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--white);line-height:1.2;margin-bottom:8px;}
+.hero-sub{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6;}
+.hero-stats{display:flex;gap:20px;flex-wrap:wrap;}
+.hstat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);padding:14px 20px;text-align:center;min-width:110px;}
+.hstat-num{font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:var(--gold);}
+.hstat-label{font-size:10px;color:rgba(255,255,255,0.55);margin-top:2px;line-height:1.3;}
+
+/* ── JAROSLAVA STATUS CARD ── */
+.status-bar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.status-chip{display:flex;align-items:center;gap:6px;background:var(--gold-pale);border:1px solid #E8C96A;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#8A6500;}
+.status-chip::before{content:'✓';background:var(--gold);color:white;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
+.status-alert{display:flex;align-items:center;gap:6px;background:var(--teal-light);border:1px solid #A8D8CF;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--teal);}
+.status-note{font-size:11px;color:var(--text-muted);margin-left:auto;}
+
+/* ── TABS ── */
+.tabs-wrap{padding:24px 32px 0;}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);flex-wrap:wrap;}
+.tab{padding:10px 18px;font-size:12.5px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:var(--radius) var(--radius) 0 0;border:none;background:none;transition:all .2s;white-space:nowrap;}
+.tab:hover{color:var(--navy);background:var(--slate);}
+.tab.active{background:var(--white);color:var(--navy);font-weight:600;border:1px solid var(--border);border-bottom:2px solid var(--white);margin-bottom:-2px;}
+
+/* ── PANELS ── */
+.panels{padding:24px 32px 40px;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);}
+.card-title{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--slate);}
+.card-subtitle{font-size:11.5px;color:var(--text-muted);margin-top:-10px;margin-bottom:16px;line-height:1.6;}
+.card-grid{display:grid;gap:16px;}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:1fr 1fr 1fr;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+
+/* ── METRIC BOX ── */
+.metric{background:var(--slate);border-radius:8px;padding:16px;text-align:center;}
+.metric.gold{background:var(--gold-pale);border:1px solid #E8C96A;}
+.metric.teal{background:var(--teal-light);border:1px solid #A8D8CF;}
+.metric.red{background:var(--red-light);border:1px solid #EAB0AB;}
+.metric-val{font-family:'Sora',sans-serif;font-size:22px;font-weight:700;color:var(--navy);}
+.metric.gold .metric-val{color:#8A6500;}
+.metric.teal .metric-val{color:var(--teal);}
+.metric.red .metric-val{color:var(--red);}
+.metric-label{font-size:10.5px;color:var(--text-muted);margin-top:3px;line-height:1.35;}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{background:var(--navy);color:rgba(255,255,255,0.9);font-weight:600;font-size:10.5px;letter-spacing:0.5px;text-transform:uppercase;padding:10px 14px;text-align:left;}
+.data-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-mid);}
+.data-table tr:hover td{background:var(--slate);}
+.data-table tr.highlight td{background:var(--gold-pale);font-weight:600;color:var(--navy);}
+.tag-green{background:var(--teal-light);color:var(--teal);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;}
+.tag-gold{background:var(--gold-pale);color:#8A6500;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;}
+.tag-gray{background:var(--slate);color:var(--text-muted);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;}
+.tag-red{background:var(--red-light);color:var(--red);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:600;}
+
+/* ── CALCULATOR ── */
+.calc-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--slate);}
+.calc-row:last-child{border-bottom:none;}
+.calc-label{font-size:12px;color:var(--text-mid);}
+.calc-value{font-size:13px;font-weight:600;color:var(--navy);}
+.calc-value.positive{color:var(--teal);}
+.calc-value.negative{color:var(--red);}
+
+/* ── PROCESS STEPS ── */
+.steps{display:flex;flex-direction:column;gap:16px;}
+.step{display:flex;gap:16px;align-items:flex-start;}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--white);font-family:'Sora',sans-serif;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.step-body{flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.step-title{font-weight:600;font-size:13px;color:var(--navy);margin-bottom:4px;}
+.step-text{font-size:11.5px;color:var(--text-mid);line-height:1.6;}
+.step-tag{display:inline-block;background:var(--gold-pale);color:#8A6500;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:600;margin-top:6px;}
+.step-connector{width:2px;height:16px;background:var(--navy-mid);margin:0 0 0 15px;opacity:.3;}
+
+/* ── RIGHTS/OBLIGATIONS ── */
+.ro-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.ro-card{border-radius:var(--radius);padding:20px;}
+.ro-card.rights{background:var(--teal-light);border:1px solid #A8D8CF;}
+.ro-card.oblig{background:#FEF0F0;border:1px solid #F0C4C4;}
+.ro-card-title{font-weight:700;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.ro-card.rights .ro-card-title{color:var(--teal);}
+.ro-card.oblig .ro-card-title{color:var(--red);}
+.ro-item{font-size:11.5px;color:var(--text-mid);line-height:1.6;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;gap:8px;align-items:flex-start;}
+.ro-item:last-child{border:none;}
+.ro-icon{flex-shrink:0;margin-top:2px;}
+
+/* ── ELIGIBILITY ── */
+.eligibility-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.elig-block{border-radius:8px;padding:16px;}
+.elig-block.yes{background:var(--teal-light);border:1px solid #A8D8CF;}
+.elig-block.partial{background:var(--gold-pale);border:1px solid #E8C96A;}
+.elig-block.no{background:var(--red-light);border:1px solid #EAB0AB;}
+.elig-title{font-weight:700;font-size:12px;margin-bottom:8px;}
+.elig-block.yes .elig-title{color:var(--teal);}
+.elig-block.partial .elig-title{color:#8A6500;}
+.elig-block.no .elig-title{color:var(--red);}
+.elig-text{font-size:11px;color:var(--text-mid);line-height:1.6;}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--slate-mid);}
+.tl-item{position:relative;margin-bottom:20px;}
+.tl-dot{position:absolute;left:-24px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--navy);border:2px solid var(--white);box-shadow:0 0 0 2px var(--navy);}
+.tl-dot.gold{background:var(--gold);}
+.tl-dot.teal{background:var(--teal);}
+.tl-dot.red{background:var(--red);}
+.tl-period{font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:3px;}
+.tl-content{font-size:12px;color:var(--text-mid);line-height:1.6;}
+
+/* ── CHANGE LOG ── */
+.change-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--slate);}
+.change-badge{flex-shrink:0;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;height:fit-content;margin-top:2px;}
+.change-badge.new{background:#DDFDE8;color:#157A3B;}
+.change-badge.modified{background:#FFF3CD;color:#8A6500;}
+.change-badge.info{background:var(--slate);color:var(--text-muted);}
+.change-text{font-size:12px;color:var(--text-mid);line-height:1.6;}
+
+/* ── DISCLAIMER ── */
+.disclaimer{background:var(--slate);border-radius:8px;padding:12px 16px;font-size:10.5px;color:var(--text-muted);line-height:1.6;margin-top:20px;border-left:3px solid var(--slate-mid);}
+
+/* ── CHART CONTAINER ── */
+.chart-wrap{position:relative;height:280px;margin-top:8px;}
+
+/* ── SWOT ── */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;}
+.swot-box{border-radius:8px;padding:12px 14px;}
+.swot-box.s{background:var(--teal-light);border:1px solid #A8D8CF;}
+.swot-box.w{background:var(--red-light);border:1px solid #EAB0AB;}
+.swot-box.o{background:var(--gold-pale);border:1px solid #E8C96A;}
+.swot-box.t{background:var(--slate);border:1px solid var(--slate-mid);}
+.swot-label{font-weight:700;font-size:11px;margin-bottom:6px;letter-spacing:0.5px;}
+.swot-box.s .swot-label{color:var(--teal);}
+.swot-box.w .swot-label{color:var(--red);}
+.swot-box.o .swot-label{color:#8A6500;}
+.swot-box.t .swot-label{color:var(--text-muted);}
+.swot-item{font-size:10.5px;color:var(--text-mid);line-height:1.55;padding:2px 0;}
+
+/* ── PROFILE COMPARE CARDS ── */
+.profile-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.profile-card{border-radius:var(--radius);padding:18px;}
+.profile-card.jara{background:var(--teal-light);border:1px solid #A8D8CF;}
+.profile-card.student{background:var(--gold-pale);border:1px solid #E8C96A;}
+.profile-name{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;margin-bottom:4px;}
+.profile-card.jara .profile-name{color:var(--teal);}
+.profile-card.student .profile-name{color:#8A6500;}
+.profile-role{font-size:11px;color:var(--text-muted);margin-bottom:12px;}
+.profile-row{display:flex;justify-content:space-between;font-size:11.5px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.06);}
+.profile-row:last-child{border:none;}
+.profile-row span:first-child{color:var(--text-mid);}
+.profile-row span:last-child{font-weight:600;color:var(--navy);}
+
+/* ── RESPONSIVE ── */
+/* Tables: allow horizontal scroll within their card on narrow screens */
+@media(max-width:760px){
+  .card:has(table){ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .data-table{ min-width:560px; }
+}
+@media(max-width:720px){
+  .grid-2,.grid-3,.grid-4,.ro-grid,.eligibility-grid,.swot-grid,.profile-compare{grid-template-columns:1fr;}
+  .swot-grid{grid-template-rows:auto;}
+  .hero-stats,.hero{flex-direction:column;}
+  .tabs{overflow-x:auto;}
+  .panels,.tabs-wrap{padding-left:16px;padding-right:16px;}
+  .top-header{height:auto;padding:10px 16px;flex-direction:column;align-items:flex-start;}
+}
+@media(max-width:480px){
+  .hero{padding:18px 16px;}
+  .hero-title{font-size:18px;}
+  .hero-sub{font-size:11px;}
+  .hstat{min-width:90px;padding:10px 12px;}
+  .hstat-num{font-size:18px;}
+  .status-bar{padding:10px 16px;gap:8px;}
+  .status-chip,.status-alert{font-size:10px;padding:4px 9px;}
+  .card{padding:14px;}
+  .card-title{font-size:12.5px;}
+  .metric-val{font-size:17px;}
+  .tab{padding:8px 12px;font-size:11.5px;}
+  .logo{font-size:12.5px;line-height:1.4;}
+  .chart-wrap{height:230px !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="logo">ÚPSVaR · <span>NP Finančné stimuly pre zamestnanosť</span> · Mentorované zapracovanie</div>
+  <div class="header-right">
+    <div class="badge-date">📅 12. jún 2026 · Pripravila: <a href="https://www.linkedin.com/in/jaroslava-guspanova/" target="_blank">Ing. Jaroslava Guspanová</a></div>
+    <div class="badge-eu">ESF+ · Program Slovensko 2021–2027</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-main">
+    <div class="hero-eyebrow">Analýza pre zamestnávateľa</div>
+    <div class="hero-title">Koľko ušetríte prijatím<br>dlhodobo nezamestnanej?</div>
+    <div class="hero-sub">Ing. Jaroslava Guspanová · evidovaná na ÚPSVaR od 10/2023 · Košice<br>Aktualizácia projektu č. 7 · platná od 30. 4. 2026</div>
+  </div>
+  <div class="hero-stats">
+    <div class="hstat">
+      <div class="hstat-num">22 065 €</div>
+      <div class="hstat-label">Max. príspevok<br>ÚPSVaR celkom</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num">12 mes.</div>
+      <div class="hstat-label">Príspevok<br>na mzdu</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num">53 %</div>
+      <div class="hstat-label">Úspora nákladov<br>za 18 mesiacov</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num">4 mes.</div>
+      <div class="hstat-label">Príspevok<br>na mentora</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-chip">Dlhodobo nezamestnaná (32 mesiacov)</div>
+  <div class="status-chip">Rodič malých detí</div>
+  <div class="status-chip">Prioritná kategória ZUoZ</div>
+  <div class="status-alert">✓ Oprávnená uchádzačka – najvyšší balík podpory</div>
+  <div class="status-note">Pozícia: Finančný kontrolór · Brutto: 1 700 €/mes.</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('eligibility')">👤 Profil &amp; Oprávnenosť</button>
+    <button class="tab" onclick="showTab('finance')">💰 Finančné prepočty</button>
+    <button class="tab" onclick="showTab('compare')">📊 Porovnanie skupín projektu</button>
+    <button class="tab" onclick="showTab('parttime')">⏱️ Skrátený úväzok: Ja vs. Študent</button>
+    <button class="tab" onclick="showTab('process')">📋 Postup pre zamestnávateľa</button>
+    <button class="tab" onclick="showTab('rights')">⚖️ Práva &amp; povinnosti</button>
+    <button class="tab" onclick="showTab('changelog')">📝 Zmeny apr. 2026</button>
+  </div>
+</div>
+
+<!-- PANELS -->
+<div class="panels">
+
+  <!-- TAB 1: ELIGIBILITY -->
+  <div class="panel active" id="panel-eligibility">
+    <div class="card-grid grid-2" style="margin-bottom:16px;">
+
+      <div class="card">
+        <div class="card-title">Profil uchádzačky – Ing. Jaroslava Guspanová</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot"></div>
+            <div class="tl-period">2001 – 2023</div>
+            <div class="tl-content"><strong>Vzdelanie &amp; prax:</strong> Ekonomická univerzita Bratislava (Ing.), 12+ rokov v oblasti financií a controllingu, EXIsport s.r.o. Košice</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot gold"></div>
+            <div class="tl-period">09/2016 – 09/2023</div>
+            <div class="tl-content"><strong>Materská / rodičovská dovolenka</strong> – kategória „rodič malých detí" v evidencii ÚPSVaR</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot red"></div>
+            <div class="tl-period">10/2023 – jún 2026 <strong>(32 mesiacov)</strong></div>
+            <div class="tl-content"><strong>Evidovaná na ÚPSVaR Košice</strong> – dlhodobá nezamestnanosť (definícia: evidencia &gt; 12 mesiacov). Súbežne: 13 certifikovaných kurzov (Power BI, SQL, SAP, AI agenti, finančná analýza…)</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot teal"></div>
+            <div class="tl-period">Cieľový stav</div>
+            <div class="tl-content"><strong>Finančný kontrolór</strong> – pozícia zodpovedá vzdelaniu a skúsenostiam; zmluva na dobu neurčitú min. 20 hod./týždeň</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Podmienky oprávnenosti – splnenie</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="elig-block yes">
+            <div class="elig-title">✅ Dlhodobo nezamestnaná (DNO) – PRIMÁRNA KATEGÓRIA</div>
+            <div class="elig-text">Evidovaná &gt; 12 mesiacov = splnené (32 mes.). DNO má PRIORITU pri prideľovaní podpory. Získava <strong>najdlhší balík</strong>: 12 mes. príspevok + 4 mes. mentoring.</div>
+          </div>
+          <div class="elig-block yes">
+            <div class="elig-title">✅ Rodič malých detí</div>
+            <div class="elig-text">Evidovaná po materskej/rodičovskej dovolenke = ďalšia zvýhodňujúca kategória. Posilňuje oprávnenosť pri prípadnom konkurenčnom hodnotení žiadostí.</div>
+          </div>
+          <div class="elig-block yes">
+            <div class="elig-title">✅ Región Košice</div>
+            <div class="elig-text">Projekt dostupný vo všetkých krajoch <strong>okrem BSK</strong>. Košice (Košický kraj) = plne oprávnený región.</div>
+          </div>
+          <div class="elig-block yes">
+            <div class="elig-title">✅ Pracovná zmluva</div>
+            <div class="elig-text">Musí byť na dobu neurčitú, min. 20 hod./týždeň. Ponúkaná pozícia (plný úväzok 40h) podmienku výrazne prevyšuje.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Prehľad cieľových skupín NP FSZ – kde patrí Jaroslava</div>
+      <table class="data-table">
+        <thead><tr>
+          <th>Kategória</th><th>Podmienka</th><th>Jaroslava</th><th>Trvanie príspevku</th><th>Mentoring</th><th>Udržanie PM</th>
+        </tr></thead>
+        <tbody>
+          <tr class="highlight">
+            <td><strong>Dlhodobo nezamestnaní (DNO)</strong></td>
+            <td>Evidencia &gt; 12 mes.</td>
+            <td><span class="tag-green">✓ ÁNO (32 mes.)</span></td>
+            <td><strong>12 mesiacov</strong></td>
+            <td>4 mesiace</td>
+            <td>6 mesiacov</td>
+          </tr>
+          <tr>
+            <td>Nízko kvalifikovaní</td>
+            <td>Vzdelanie &lt; SOŠ</td>
+            <td><span class="tag-red">✗ NIE (má VŠ)</span></td>
+            <td>12 mesiacov</td>
+            <td>4 mesiace</td>
+            <td>6 mesiacov</td>
+          </tr>
+          <tr>
+            <td>Osoby so zdrav. postihnutím (OZP)</td>
+            <td>Doklad o OZP</td>
+            <td><span class="tag-gray">— neuplatňuje sa</span></td>
+            <td>9 mesiacov</td>
+            <td>4 mesiace</td>
+            <td>5 mesiacov</td>
+          </tr>
+          <tr>
+            <td>Rodičia malých detí</td>
+            <td>Evidencia po MRD</td>
+            <td><span class="tag-gold">✓ ÁNO (sekundárne)</span></td>
+            <td>3 mesiace</td>
+            <td>2 mesiace</td>
+            <td>2 mesiace</td>
+          </tr>
+          <tr>
+            <td>Ostatní ZUoZ / mladí NEET</td>
+            <td>ZUoZ podľa §8 ZoSZ</td>
+            <td><span class="tag-gray">— DNO má prednosť</span></td>
+            <td>3 mesiace</td>
+            <td>2 mesiace</td>
+            <td>2 mesiace</td>
+          </tr>
+          <tr>
+            <td>Mladí NEET do 30 rokov</td>
+            <td>Vek &lt; 30, NEET status</td>
+            <td><span class="tag-red">✗ NIE (nad 30)</span></td>
+            <td>3–9 mesiacov</td>
+            <td>2–4 mesiace</td>
+            <td>2–5 mesiacov</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="disclaimer">
+        ⚠️ Jaroslava primárne patrí do kategórie <strong>DNO</strong> (dlhodobo nezamestnaná), čo je prioritná skupina s NAJLEPŠÍM finančným balíkom. Kategória „rodičia malých detí" predstavuje sekundárnu výhodu pri posudzovaní žiadosti.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: FINANCE -->
+  <div class="panel" id="panel-finance">
+    <div class="card-grid grid-4" style="margin-bottom:16px;">
+      <div class="metric gold">
+        <div class="metric-val">2 298 €</div>
+        <div class="metric-label">Celková cena práce (CCP)<br>za mesiac (brutto 1 700 €)</div>
+      </div>
+      <div class="metric teal">
+        <div class="metric-val">1 839 €</div>
+        <div class="metric-label">Mesačný príspevok ÚPSVaR<br>(80 % z CCP, odhad)</div>
+      </div>
+      <div class="metric gold">
+        <div class="metric-val">22 065 €</div>
+        <div class="metric-label">Príspevok na mzdu celkom<br>(12 mes. × 80 % CCP)</div>
+      </div>
+      <div class="metric teal">
+        <div class="metric-val">~800 €</div>
+        <div class="metric-label">Príspevok na mentora<br>(4 mes. × ~200 €)</div>
+      </div>
+    </div>
+
+    <div class="card-grid grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">Výpočet CCP – základ pre príspevok</div>
+        <div class="calc-row">
+          <div class="calc-label">Hrubá mzda (brutto)</div>
+          <div class="calc-value">1 700,00 €</div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Odvody zamestnávateľa – sociálne (~25,2 %)</div>
+          <div class="calc-value">428,40 €</div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Odvody zamestnávateľa – zdravotné (10 %)</div>
+          <div class="calc-value">170,00 €</div>
+        </div>
+        <div class="calc-row" style="border-top:2px solid var(--navy);margin-top:4px;padding-top:12px;">
+          <div class="calc-label"><strong>Celková cena práce (CCP)</strong></div>
+          <div class="calc-value positive"><strong>2 298,40 € ≈ 2 298 €</strong></div>
+        </div>
+        <div class="disclaimer" style="margin-top:12px;">Sadzba odvodov platná pre rok 2026. Presná výška závisí od individuálnych podmienok. Príspevok sa kráti úmerne k dohodnutému pracovnému času (pri plnom úväzku sa krátiť nebude).</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Náklady zamestnávateľa – 18 mesiacov (12 + 6)</div>
+        <div class="calc-row">
+          <div class="calc-label">Mes. 1–12: CCP minus 80 % príspevok ÚPSVaR</div>
+          <div class="calc-value positive">460 €/mes.</div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Celkom mes. 1–12</div>
+          <div class="calc-value positive">5 516 €</div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Mes. 13–18: udržanie PM (bez príspevku)</div>
+          <div class="calc-value">2 298 €/mes.</div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Celkom mes. 13–18</div>
+          <div class="calc-value">13 790 €</div>
+        </div>
+        <div class="calc-row" style="border-top:2px solid var(--teal);margin-top:4px;padding-top:12px;">
+          <div class="calc-label"><strong>SPOLU 18 mesiacov (reálne náklady)</strong></div>
+          <div class="calc-value positive"><strong>19 307 €</strong></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-label">Bez príspevku (bežný zamestnanec)</div>
+          <div class="calc-value negative">41 371 €</div>
+        </div>
+        <div class="calc-row" style="border-top:2px solid var(--gold);margin-top:4px;padding-top:12px;">
+          <div class="calc-label"><strong>🎯 Úspora zamestnávateľa</strong></div>
+          <div class="calc-value positive"><strong>22 065 € (53 %)</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rozloženie nákladov zamestnávateľa – mesačný prehľad</div>
+      <div class="chart-wrap">
+        <canvas id="chartMonthly"></canvas>
+      </div>
+      <div class="disclaimer">Graf zobrazuje mesačné náklady zamestnávateľa na CCP pri zamestnaní Jaroslavy. Modré stĺpce = príspevok ÚPSVaR, tmavomodré = reálny náklad firmy. Po mesiaci 12 nastupuje povinnosť udržania pracovného miesta (6 mes.) bez príspevku.</div>
+    </div>
+  </div>
+
+  <!-- TAB 3: COMPARE -->
+  <div class="panel" id="panel-compare">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Porovnanie scenárov zamestnania jednotlivých skupín projektu</div>
+      <div class="card-subtitle">Celkové náklady zamestnávateľa za 18 mesiacov pri rovnakej hrubej mzde (1 700 €), v závislosti od kategórie uchádzača podľa NP Finančné stimuly pre zamestnanosť.</div>
+      <div class="chart-wrap" style="height:320px;">
+        <canvas id="chartCompare"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Porovnávacia tabuľka – všetky scenáre (brutto 1 700 €, 18 mesiacov)</div>
+      <table class="data-table">
+        <thead><tr>
+          <th>Scenár</th><th>Kategória</th><th>Mes. príspevku</th><th>Príspevok ÚPSVaR</th><th>Náklad firmy / 18 mes.</th><th>Úspora vs. bežný</th><th>Udržanie PM</th>
+        </tr></thead>
+        <tbody>
+          <tr class="highlight">
+            <td>🏆 <strong>Jaroslava Guspanová</strong></td>
+            <td><span class="tag-green">DNO · priorita</span></td>
+            <td><strong>12 mes.</strong></td>
+            <td><strong>22 065 €</strong></td>
+            <td><strong>19 307 €</strong></td>
+            <td><strong class="tag-green">22 065 € (53 %)</strong></td>
+            <td>6 mes.</td>
+          </tr>
+          <tr>
+            <td>Uchádzač – iná ZUoZ</td>
+            <td><span class="tag-gold">Ostatní ZUoZ</span></td>
+            <td>3 mes.</td>
+            <td>5 516 €</td>
+            <td>35 646 €</td>
+            <td><span class="tag-gold">5 516 € (13 %)</span></td>
+            <td>2 mes.</td>
+          </tr>
+          <tr>
+            <td>Mladý uchádzač (NEET &lt;30)</td>
+            <td><span class="tag-gold">Mladí NEET</span></td>
+            <td>3 mes.</td>
+            <td>5 516 €</td>
+            <td>35 646 €</td>
+            <td><span class="tag-gold">5 516 € (13 %)</span></td>
+            <td>2 mes.</td>
+          </tr>
+          <tr>
+            <td>Absolvent / čerstvý diplomat</td>
+            <td><span class="tag-gray">Bez zvýhodn.</span></td>
+            <td>0 mes.</td>
+            <td>0 €</td>
+            <td>41 371 €</td>
+            <td><span class="tag-red">0 € (0 %)</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>Bežný uchádzač (bez registrácie)</td>
+            <td><span class="tag-red">Neoprávnený</span></td>
+            <td>0 mes.</td>
+            <td>0 €</td>
+            <td>41 371 €</td>
+            <td><span class="tag-red">0 € (0 %)</span></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="metric teal">
+          <div class="metric-val">16 549 €</div>
+          <div class="metric-label">Extra úspora Jaroslava<br>vs. iný ZUoZ (3 mes.)</div>
+        </div>
+        <div class="metric gold">
+          <div class="metric-val">4× vyšší</div>
+          <div class="metric-label">Príspevok Jaroslavy<br>vs. ostatní ZUoZ</div>
+        </div>
+        <div class="metric teal">
+          <div class="metric-val">53 %</div>
+          <div class="metric-label">Reálnych nákladov<br>ušetria za 18 mes.</div>
+        </div>
+      </div>
+      <div class="disclaimer">
+        💡 <strong>Tento prehľad je univerzálny</strong> – rovnakú logiku možno aplikovať na akúkoľvek pozíciu a hrubú mzdu. Kategória uchádzača (nie konkrétna profesia) určuje výšku štátnej podpory. Pri vyššej hrubej mzde rastie úmerne aj absolútna úspora zamestnávateľa.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: PART-TIME COMPARISON (NEW) -->
+  <div class="panel" id="panel-parttime">
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">⏱️ Skrátený úväzok 20 h/týždeň: Jaroslava vs. Študent (brigádnik)</div>
+      <div class="card-subtitle">
+        Tento modul je navrhnutý ako <strong>všeobecný nástroj pre zamestnávateľov</strong> – ukazuje, ako sa mení nákladová výhodnosť pri zamestnaní dlhodobo nezamestnanej osoby (NP FSZ) oproti študentovi na dohodu (DoBPŠ) pri rovnakom rozsahu práce 20 h/týždeň. Konkrétne čísla nižšie sú ilustrované na pozícii <em>asistent/ka controllingu (0,5 FTE)</em>, princíp je však prenositeľný na akúkoľvek pozíciu.
+      </div>
+
+      <div class="profile-compare">
+        <div class="profile-card jara">
+          <div class="profile-name">👩‍💼 Jaroslava (NP FSZ, 0,5 FTE)</div>
+          <div class="profile-role">Asistentka controllingu · 20 h/týždeň · DNO</div>
+          <div class="profile-row"><span>Hrubá mzda</span><span>850 €/mes.</span></div>
+          <div class="profile-row"><span>Celková cena práce (CCP)</span><span>1 149,20 €/mes.</span></div>
+          <div class="profile-row"><span>Príspevok ÚPSVaR (mes. 1–12)</span><span>913,92 €/mes.</span></div>
+          <div class="profile-row"><span>Náklad firmy (mes. 1–12)</span><span>229,84 €/mes.</span></div>
+          <div class="profile-row"><span>Náklad firmy (mes. 13–18, udržanie)</span><span>1 149,20 €/mes.</span></div>
+          <div class="profile-row"><span>Záväzok zamestnávateľa</span><span>doba neurčitá + 6 mes. udržanie</span></div>
+        </div>
+        <div class="profile-card student">
+          <div class="profile-name">🎓 Študent (DoBPŠ)</div>
+          <div class="profile-role">Brigádnik / junior asistent · 20 h/týždeň</div>
+          <div class="profile-row"><span>Hrubá mzda</span><span>700 €/mes.</span></div>
+          <div class="profile-row"><span>Odvodová odpočítateľná položka</span><span>200 € (bez odvodov SP)</span></div>
+          <div class="profile-row"><span>Zdravotné poistenie zamestnávateľa</span><span>0 € (poistenec štátu)</span></div>
+          <div class="profile-row"><span>Celková cena práce (CCP)</span><span>~828 €/mes.</span></div>
+          <div class="profile-row"><span>Štátny príspevok</span><span>0 € (neoprávnený)</span></div>
+          <div class="profile-row"><span>Záväzok zamestnávateľa</span><span>žiadny (dohoda, voľne ukončiteľná)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">📈 Mesačné náklady – kde sa krivky pretnú?</div>
+        <div class="chart-wrap" style="height:300px;">
+          <canvas id="chartCrossMonthly"></canvas>
+        </div>
+        <div class="disclaimer">
+          <strong>Mesačný priesečík: ~12.–13. mesiac.</strong> Počas prvého roka (príspevok NP FSZ) je Jaroslava výrazne lacnejšia (230 € vs. 828 €/mes.). Po skončení príspevku (mes. 13+, fáza udržania PM) sa jej mesačný náklad zvýši nad náklad študenta (1 149 € vs. 828 €/mes.).
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Kumulatívne náklady – dlhodobý pohľad</div>
+        <div class="chart-wrap" style="height:300px;">
+          <canvas id="chartCrossCumulative"></canvas>
+        </div>
+        <div class="disclaimer">
+          <strong>Kumulatívny priesečík: ~34. mesiac (≈ 2,8 roka).</strong> Aj keď je mesačný náklad Jaroslavy po 12. mesiaci vyšší, jej náskok z prvého roka stačí na to, aby celkové (kumulatívne) náklady zostali nižšie počas celého bežného hodnotiaceho horizontu (18–24 mes.).
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Náklady v kľúčových bodoch – súhrnná tabuľka</div>
+      <table class="data-table">
+        <thead><tr>
+          <th>Bod v čase</th><th>Jaroslava – mes. náklad</th><th>Študent – mes. náklad</th><th>Jaroslava – kumulatívne</th><th>Študent – kumulatívne</th><th>Rozdiel (kumul.)</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Mesiac 1</td><td><span class="tag-green">229,84 €</span></td><td>828,00 €</td><td>229,84 €</td><td>828,00 €</td><td class="tag-green">−598,16 € (J lacnejšia)</td></tr>
+          <tr class="highlight"><td>Mesiac 12 (koniec príspevku)</td><td><span class="tag-green">229,84 €</span></td><td>828,00 €</td><td><strong>2 758,08 €</strong></td><td><strong>9 936,00 €</strong></td><td class="tag-green">−7 177,92 € (J lacnejšia)</td></tr>
+          <tr><td>Mesiac 13 (začiatok udržania PM)</td><td><span class="tag-red">1 149,20 €</span></td><td>828,00 €</td><td>3 907,28 €</td><td>10 764,00 €</td><td class="tag-green">−6 856,72 € (J lacnejšia)</td></tr>
+          <tr class="highlight"><td>Mesiac 18 (koniec udržania PM)</td><td>1 149,20 €</td><td>828,00 €</td><td><strong>9 653,28 €</strong></td><td><strong>14 904,00 €</strong></td><td class="tag-green">−5 250,72 € (J lacnejšia)</td></tr>
+          <tr><td>Mesiac 24</td><td>1 149,20 €</td><td>828,00 €</td><td>16 548,48 €</td><td>19 872,00 €</td><td class="tag-green">−3 323,52 € (J lacnejšia)</td></tr>
+          <tr class="highlight" style="background:#FFF3CD;"><td>≈ Mesiac 34 – PRIESEČNÍK</td><td>1 149,20 €</td><td>828,00 €</td><td>≈28 040 €</td><td>≈28 152 €</td><td class="tag-gold">≈ 0 € (vyrovnané)</td></tr>
+          <tr><td>Mesiac 42</td><td>1 149,20 €</td><td>828,00 €</td><td>37 234,08 €</td><td>34 776,00 €</td><td class="tag-gray">+2 458 € (Š lacnejší)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">SWOT analýza – porovnanie profilov</div>
+      <div class="card-grid grid-2">
+        <div>
+          <div style="font-weight:700;font-size:12px;color:var(--teal);margin-bottom:10px;">👩‍💼 Jaroslava (skúsená, NP FSZ)</div>
+          <div class="swot-grid">
+            <div class="swot-box s">
+              <div class="swot-label">SILNÉ STRÁNKY</div>
+              <div class="swot-item">12+ rokov praxe vo financiách/controllingu</div>
+              <div class="swot-item">Okamžitá produktivita, minimálne zaškoľovanie</div>
+              <div class="swot-item">13 aktuálnych certifikátov (Power BI, SQL, SAP, AI)</div>
+              <div class="swot-item">Stabilná dostupnosť (nezávisí od semestrov/skúšok)</div>
+            </div>
+            <div class="swot-box w">
+              <div class="swot-label">SLABÉ STRÁNKY</div>
+              <div class="swot-item">Vyššia "papierová" hrubá mzda</div>
+              <div class="swot-item">Po 12. mesiaci vyšší mesačný náklad ako pri brigádnikovi</div>
+              <div class="swot-item">Administratívna záťaž žiadosti o príspevok</div>
+            </div>
+            <div class="swot-box o">
+              <div class="swot-label">PRÍLEŽITOSTI</div>
+              <div class="swot-item">53% úspora v 1. roku → priestor na investíciu do zaškolenia</div>
+              <div class="swot-item">Budovanie dlhodobej inštitucionálnej znalosti</div>
+              <div class="swot-item">Pozitívny employer branding (spol. zodpovednosť)</div>
+            </div>
+            <div class="swot-box t">
+              <div class="swot-label">HROZBY</div>
+              <div class="swot-item">Záväzok udržania PM (6 mes. bez podpory)</div>
+              <div class="swot-item">Zmena/zánik dotačnej schémy pri budúcich náboroch</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:700;font-size:12px;color:#8A6500;margin-bottom:10px;">🎓 Študent (brigádnik, DoBPŠ)</div>
+          <div class="swot-grid">
+            <div class="swot-box s">
+              <div class="swot-label">SILNÉ STRÁNKY</div>
+              <div class="swot-item">Nízke a konštantné mzdové náklady</div>
+              <div class="swot-item">Žiadny dlhodobý záväzok – flexibilné skončenie</div>
+              <div class="swot-item">Nulová administratíva voči ÚPSVaR</div>
+              <div class="swot-item">Čerstvý pohľad, motivácia učiť sa</div>
+            </div>
+            <div class="swot-box w">
+              <div class="swot-label">SLABÉ STRÁNKY</div>
+              <div class="swot-item">Obmedzená dostupnosť (skúškové, prázdniny)</div>
+              <div class="swot-item">Potreba zaškolenia, nižšia okamžitá produktivita</div>
+              <div class="swot-item">Minimálna predchádzajúca prax</div>
+              <div class="swot-item">Vysoká fluktuácia (ukončenie štúdia, zmena školy)</div>
+            </div>
+            <div class="swot-box o">
+              <div class="swot-label">PRÍLEŽITOSTI</div>
+              <div class="swot-item">Pipeline budúcich talentov pre plný úväzok</div>
+              <div class="swot-item">Flexibilné škálovanie kapacity podľa semestra</div>
+            </div>
+            <div class="swot-box t">
+              <div class="swot-label">HROZBY</div>
+              <div class="swot-item">Výpadky pokrytia počas skúškového/prázdnin</div>
+              <div class="swot-item">Žiadny štátny príspevok – plná nákladová záťaž od mes. 1</div>
+              <div class="swot-item">Časté opakované zaškoľovanie nových brigádnikov</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 Celkové zhrnutie a odporúčanie</div>
+      <div style="font-size:12.5px;color:var(--text-mid);line-height:1.8;">
+        <p style="margin-bottom:10px;">Z čisto <strong>nákladového</strong> pohľadu na 20 h/týždeň platí: počas <strong>prvých 12 mesiacov</strong> je zamestnanie Jaroslavy v rámci NP FSZ jednoznačne výhodnejšie – náklad firmy je <strong>približne 3,6× nižší</strong> ako pri študentovi (230 € vs. 828 €/mes.). Po skončení príspevku, vo fáze povinného udržania pracovného miesta (mes. 13–18), sa táto výhoda mesačne otáča v prospech študenta, no kumulatívny náskok z prvého roka je natoľko veľký, že <strong>celkové náklady zostávajú nižšie pri Jaroslave približne do 34. mesiaca (~2,8 roka)</strong>.</p>
+        <p style="margin-bottom:10px;">Inak povedané: <strong>pri bežnom plánovacom horizonte (1–2 roky) sa oplatí zamestnať Jaroslavu</strong>, a to aj na skrátený úväzok. Pri veľmi dlhodobom horizonte (3+ roky) sa rozdiel postupne stiera a brigádnická forma sa stáva mierne výhodnejšou čisto z pohľadu priamych mzdových nákladov – avšak bez zohľadnenia kvalitatívnych faktorov (skúsenosti, stabilita, produktivita, náklady na opakované zaškoľovanie brigádnikov), ktoré zo SWOT analýzy jasne hovoria v prospech skúsenej zamestnankyne.</p>
+        <p>Pre zamestnávateľa, ktorý zvažuje skrátený úväzok ako kompromis medzi nákladmi a flexibilitou, predstavuje <strong>kombinácia "skúsený zamestnanec na 20h v rámci NP FSZ"</strong> nákladovo aj kvalitatívne vyvážené riešenie – najmä ak existuje predpoklad dlhšej spolupráce.</p>
+      </div>
+      <div class="disclaimer">
+        ⚠️ <strong>Metodická poznámka:</strong> Výpočty pre študenta vychádzajú z odhadovaných parametrov dohody o brigádnickej práci študentov (DoBPŠ) – odvodová odpočítateľná položka 200 €/mes., nulové zdravotné odvody (študent = poistenec štátu), odhadovaná efektívna sadzba odvodov zamestnávateľa ~25 % na časť mzdy nad 200 €. Presné sadzby sa môžu meniť a závisia od konkrétnej dohody, veku študenta a počtu súbežných zamestnávateľov. Pred rozhodnutím odporúčame konzultáciu s mzdovou účtovníčkou / Sociálnou poisťovňou. Tento modul slúži ako <strong>orientačný nástroj</strong> – rovnaký postup (CCP vs. DoBPŠ náklady) je možné prepočítať pre akúkoľvek inú pozíciu a mzdovú úroveň.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: PROCESS -->
+  <div class="panel" id="panel-process">
+    <div class="card-grid grid-2">
+      <div class="card">
+        <div class="card-title">Postup zamestnávateľa – krok za krokom</div>
+        <div class="steps">
+
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Overiť oprávnenosť uchádzača</div>
+              <div class="step-text">Požiadať uchádzača o doklad z ÚPSVaR potvrdzujúci evidenciu a dĺžku nezamestnanosti. Jaroslava je DNO od 10/2023 → doloží potvrdenie z ÚPSVaR Košice.</div>
+              <div class="step-tag">⏱ pred podaním žiadosti</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Podať žiadosť na ÚPSVaR Košice <strong>pred</strong> uzatvorením zmluvy</div>
+              <div class="step-text">Elektronická žiadosť výlučne cez <strong>slovensko.sk</strong> (formulár NP FSZ). Žiadosť MUSÍ byť podaná a schválená skôr, ako nastane zamestnanec do práce. Bližšie info: ÚPSVaR Košice, Staničné námestie 9.</div>
+              <div class="step-tag">📋 slovensko.sk · elektronicky</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Počkať na schválenie a podpísať Dohodu s ÚPSVaR</div>
+              <div class="step-text">Po schválení žiadosti ÚPSVaR uzavrie so zamestnávateľom <em>Dohodu o poskytnutí príspevku</em>. Dohoda špecifikuje výšku príspevku, dobu poskytovania a podmienky udržania pracovného miesta.</div>
+              <div class="step-tag">📄 Dohoda → záväzný dokument</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Uzatvoriť pracovnú zmluvu na dobu neurčitú</div>
+              <div class="step-text">Zmluva: <strong>dobu neurčitú</strong>, min. <strong>20 hodín/týždeň</strong>. Odporúčame plný úväzok (40h), zodpovedá ponúkanej pozícii. Dátum nástupu musí byť po podpise Dohody s ÚPSVaR.</div>
+              <div class="step-tag">📝 Pracovná zmluva</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <div class="step-title">Určiť mentora a uzatvoriť dodatok k jeho zmluve</div>
+              <div class="step-text">Mentor = existujúci zamestnanec firmy. Zamestnávateľ podpíše s mentorom <em>dodatok k pracovnej zmluve</em> o výkone mentorskej činnosti. Mentor dostáva príplatok, ktorý ÚPSVaR refunduje (prvé 4 mesiace).</div>
+              <div class="step-tag">👥 Mentor → dodatok → 4 mesiace</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">6</div>
+            <div class="step-body">
+              <div class="step-title">Mesačné výkazy a žiadosti o vyplatenie príspevku</div>
+              <div class="step-text">Každý mesiac: doložiť ÚPSVaR mzdový list, výplatnice a priebežné hodnotenie zapracovania (vzor od ÚPSVaR). Príspevok sa vypláca mesačne na bankový účet zamestnávateľa.</div>
+              <div class="step-tag">📊 mesačne · 12 mesiacov</div>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+
+          <div class="step">
+            <div class="step-num">7</div>
+            <div class="step-body">
+              <div class="step-title">Udržanie pracovného miesta po skončení podpory</div>
+              <div class="step-text">Po ukončení 12-mesačného príspevku nastupuje <strong>povinné udržanie pracovného miesta po dobu 6 mesiacov</strong> bez príspevku. Ak zamestnávateľ poruší túto podmienku, musí vrátiť príspevky pomerne.</div>
+              <div class="step-tag">⚠️ 6 mesiacov udržania PM</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">Kontakt a podanie žiadosti</div>
+          <table class="data-table">
+            <tbody>
+              <tr><td><strong>Podanie žiadosti</strong></td><td>Elektronicky cez slovensko.sk (jediný spôsob)</td></tr>
+              <tr><td><strong>ÚPSVaR Košice</strong></td><td>Staničné námestie 9, 042 11 Košice</td></tr>
+              <tr><td><strong>Webstránka</strong></td><td>upsvr.gov.sk</td></tr>
+              <tr><td><strong>Platnosť aktualizácie</strong></td><td>Aktualizácia č. 7 · od 30. 4. 2026</td></tr>
+              <tr><td><strong>Financovanie</strong></td><td>ESF+ · Program Slovensko 2021–2027</td></tr>
+              <tr><td><strong>Výnimka</strong></td><td>Bratislavský kraj = <span class="tag-red">vylúčený</span> (Košice ✓)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Časový harmonogram – záväzky zamestnávateľa</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--navy);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">PRED</div>
+              <div>Žiadosť na ÚPSVaR + schválenie</div>
+            </div>
+            <div style="margin-left:35px;border-left:2px solid var(--border);height:8px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--teal);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">MES 1</div>
+              <div>Nástup · zmluva · mentor · dodatok</div>
+            </div>
+            <div style="margin-left:35px;border-left:2px solid var(--border);height:8px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--teal);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">MES 1–4</div>
+              <div>Príspevok na mzdu <strong>+ príspevok na mentora</strong></div>
+            </div>
+            <div style="margin-left:35px;border-left:2px solid var(--border);height:8px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--teal);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">MES 5–12</div>
+              <div>Príspevok na mzdu (bez príspevku na mentora)</div>
+            </div>
+            <div style="margin-left:35px;border-left:2px solid var(--border);height:8px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--gold);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">MES 13–18</div>
+              <div>Povinné udržanie PM – <strong>bez príspevku</strong></div>
+            </div>
+            <div style="margin-left:35px;border-left:2px solid var(--border);height:8px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <div style="background:var(--navy-mid);color:white;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;min-width:70px;text-align:center;">MES 19+</div>
+              <div>Záväzky voči ÚPSVaR splnené – bežný pracovný vzťah</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: RIGHTS & OBLIGATIONS -->
+  <div class="panel" id="panel-rights">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Práva a povinnosti zamestnávateľa – prehľad</div>
+      <div class="ro-grid">
+        <div class="ro-card rights">
+          <div class="ro-card-title">✅ Práva zamestnávateľa</div>
+          <div class="ro-item"><span class="ro-icon">💰</span> Nárok na mesačný príspevok na mzdu (80 % CCP) počas 12 mesiacov po splnení podmienok</div>
+          <div class="ro-item"><span class="ro-icon">👨‍🏫</span> Nárok na príspevok na mentora (refundácia príplatku) počas prvých 4 mesiacov</div>
+          <div class="ro-item"><span class="ro-icon">🔄</span> Právo vybrať si mentora z radov vlastných zamestnancov (žiadny externý mentor nie je povinný)</div>
+          <div class="ro-item"><span class="ro-icon">📅</span> Právo dohodnúť konkrétny termín nástupu (po podpise Dohody)</div>
+          <div class="ro-item"><span class="ro-icon">⚖️</span> Právo ukončiť pracovný pomer zo zákonných dôvodov (ale s povinnosťou vrátenia príspevku)</div>
+          <div class="ro-item"><span class="ro-icon">ℹ️</span> Právo na metodickú pomoc a konzultácie na ÚPSVaR Košice</div>
+        </div>
+        <div class="ro-card oblig">
+          <div class="ro-card-title">⚠️ Povinnosti zamestnávateľa</div>
+          <div class="ro-item"><span class="ro-icon">📋</span> Podanie žiadosti <strong>pred</strong> uzatvorením pracovnej zmluvy (nie po nástupe!)</div>
+          <div class="ro-item"><span class="ro-icon">📝</span> Pracovná zmluva výlučne na <strong>dobu neurčitú</strong>, min. 20h/týždeň</div>
+          <div class="ro-item"><span class="ro-icon">👥</span> Určenie a písomné poverenie mentora + dodatok k jeho zmluve</div>
+          <div class="ro-item"><span class="ro-icon">📊</span> Mesačné priebežné hodnotenia zapracovania a mzdové výkazy pre ÚPSVaR</div>
+          <div class="ro-item"><span class="ro-icon">🏢</span> Udržanie pracovného miesta <strong>6 mesiacov</strong> po ukončení príspevku (celkom 18 mes.)</div>
+          <div class="ro-item"><span class="ro-icon">🔙</span> Vrátenie príspevku (pomerné) pri predčasnom ukončení pracovného pomeru bez zákonného dôvodu</div>
+          <div class="ro-item"><span class="ro-icon">🚫</span> Nesmie mať nedoplatky voči štátu, ÚPSVaR, zdravotným poisťovniam</div>
+          <div class="ro-item"><span class="ro-icon">📉</span> Nesmie prepúšťať na tej istej pracovnej pozícii v posledných 6 mesiacoch pred žiadosťou</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid grid-2">
+      <div class="card">
+        <div class="card-title">Vrátenie príspevku – kedy a koľko?</div>
+        <table class="data-table">
+          <thead><tr><th>Situácia</th><th>Povinnosť vrátenia</th></tr></thead>
+          <tbody>
+            <tr><td>Ukončenie bez zákonného dôvodu do 12. mesiaca</td><td><span class="tag-red">Pomerné vrátenie príspevku</span></td></tr>
+            <tr><td>Ukončenie so zákonným dôvodom (výpoveď zo strany Z.)</td><td><span class="tag-green">Bez vrátenia</span></td></tr>
+            <tr><td>Nedodržanie udržania PM (mes. 13–18)</td><td><span class="tag-red">Pomerné vrátenie</span></td></tr>
+            <tr><td>PM zrušené pre HN zamestnávateľa</td><td><span class="tag-gold">Posudzuje ÚPSVaR</span></td></tr>
+            <tr><td>Zamestnanec odíde dobrovoľne (výpoveď zo strany Z.)</td><td><span class="tag-green">Bez vrátenia</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Podmienky pre zamestnávateľa – zhrnutie</div>
+        <table class="data-table">
+          <thead><tr><th>Podmienka</th><th>Hodnota</th></tr></thead>
+          <tbody>
+            <tr><td>Forma pracovného pomeru</td><td><span class="tag-green">Dobu neurčitú</span></td></tr>
+            <tr><td>Min. rozsah práce</td><td><span class="tag-green">20 hod./týždeň</span></td></tr>
+            <tr><td>Región</td><td><span class="tag-green">Mimo BSK (Košice ✓)</span></td></tr>
+            <tr><td>Nedoplatky zamestnávateľa</td><td><span class="tag-red">Nesmú existovať</span></td></tr>
+            <tr><td>Prepúšťanie pred žiadosťou</td><td><span class="tag-red">Posledných 6 mes. nie</span></td></tr>
+            <tr><td>Podanie žiadosti</td><td><span class="tag-gold">Pred nástupom Z.</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: CHANGELOG -->
+  <div class="panel" id="panel-changelog">
+    <div class="card-grid grid-2">
+      <div class="card">
+        <div class="card-title">Aktualizácia č. 7 – platná od 30. 4. 2026</div>
+        <div class="disclaimer" style="margin-bottom:16px;">
+          ℹ️ Konkrétny obsah Aktualizácie č. 7 nie je plne verejne dostupný v čase spracovania tejto analýzy. Nižšie sú uvedené zmeny, ktoré sú verifikovateľné z verejných zdrojov, a porovnanie so štartovacím znením projektu (spustenie 2. 4. 2024).
+        </div>
+        <div class="change-item">
+          <span class="change-badge new">NOVÉ</span>
+          <div class="change-text"><strong>NP FSZ II.</strong> – oznámené v marci 2026 ako nadväzujúci projekt (tzv. Finančné stimuly pre zamestnanosť II.), ktorý rozširuje cieľové skupiny a dopĺňa nové aktivity.</div>
+        </div>
+        <div class="change-item">
+          <span class="change-badge modified">UPRAVENÉ</span>
+          <div class="change-text"><strong>Administratívny postup</strong> – elektronické podávanie výlučne cez slovensko.sk (zavedené postupne; pri spustení 2024 bol umožnený aj papierový formulár).</div>
+        </div>
+        <div class="change-item">
+          <span class="change-badge modified">UPRAVENÉ</span>
+          <div class="change-text"><strong>Príloha č. 9a</strong> – výška príspevkov a dĺžka podpory je regulovaná touto prílohou, ktorá sa môže meniť aktualizáciami. Pre presné čísla odporúčame overiť priamo na ÚPSVaR Košice alebo stiahnuť aktuálnu prílohu z upsvr.gov.sk.</div>
+        </div>
+        <div class="change-item">
+          <span class="change-badge info">INFO</span>
+          <div class="change-text"><strong>Dostupný rozpočet</strong> – projekt je spolufinancovaný z ESF+ (317 mil. EUR celkovo), aktuálna dostupnosť prostriedkov pre jednotlivé ÚPSVaR sa priebežne aktualizuje.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Porovnanie – pôvodné znenie 2024 vs. stav 2026</div>
+        <table class="data-table">
+          <thead><tr><th>Parameter</th><th>Pôvodné 2024</th><th>Aktuálne 2026</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Spustenie projektu</td>
+              <td>2. 4. 2024</td>
+              <td>Stále aktívne</td>
+            </tr>
+            <tr>
+              <td>Trvanie príspevku (DNO)</td>
+              <td>12 mesiacov</td>
+              <td><span class="tag-green">12 mesiacov ✓</span></td>
+            </tr>
+            <tr>
+              <td>Mentoring (DNO)</td>
+              <td>4 mesiace</td>
+              <td><span class="tag-green">4 mesiace ✓</span></td>
+            </tr>
+            <tr>
+              <td>Udržanie PM (DNO)</td>
+              <td>6 mesiacov</td>
+              <td><span class="tag-green">6 mesiacov ✓</span></td>
+            </tr>
+            <tr>
+              <td>Podanie žiadosti</td>
+              <td>Papier + elektronicky</td>
+              <td><span class="tag-gold">Len elektronicky</span></td>
+            </tr>
+            <tr>
+              <td>Min. pracovný čas</td>
+              <td>20 hod./týždeň</td>
+              <td><span class="tag-green">20 hod./týždeň ✓</span></td>
+            </tr>
+            <tr>
+              <td>BSK vylúčenie</td>
+              <td>Áno</td>
+              <td><span class="tag-green">Áno (Košice OK)</span></td>
+            </tr>
+            <tr>
+              <td>Pokrytie (Aktualizácia)</td>
+              <td>Pôvodné znenie</td>
+              <td><span class="tag-gold">Aktualizácia č. 7</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="disclaimer" style="margin-top:16px;">
+          🔗 Pre aktuálne a presné znenie všetkých podmienok: <strong>upsvr.gov.sk</strong> → Národné projekty → NP Finančné stimuly pre zamestnanosť. Formulár pre žiadosť: <strong>slovensko.sk</strong>. Odporúčame priamy kontakt s pracovníkom ÚPSVaR Košice pre overenie dostupnosti prostriedkov pred podaním žiadosti.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">História aktualizácií projektu NP FSZ (rekonštrukcia z verejných zdrojov)</div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot teal"></div>
+          <div class="tl-period">2. apríl 2024 – Spustenie</div>
+          <div class="tl-content">Prvé dva nástroje: motivačný finančný príspevok pre ZUoZ + absolventská prax. Financovanie ESF+ v rámci Programu Slovensko.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-period">August 2024 – Spustenie mentorovaného zapracovania</div>
+          <div class="tl-content">Aktivácia podaktivity 1 – Mentorované zapracovanie pre ZUoZ a mladých NEET. Definícia 3 kategórií podpory (DNO/nízko kvalif., OZP, ostatní ZUoZ).</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-period">2024–2025 – Aktualizácie č. 1–6</div>
+          <div class="tl-content">Priebežné úpravy podmienok, prílohy č. 9a (výšky príspevkov), administratívnych postupov a finančných parametrov projektu.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gold"></div>
+          <div class="tl-period">Marec 2026 – Oznámenie NP FSZ II.</div>
+          <div class="tl-content">Ústredie práce oznámilo prípravu nadväzujúceho projektu Finančné stimuly pre zamestnanosť II., rozširujúceho okruh cieľových skupín.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot teal"></div>
+          <div class="tl-period">30. apríl 2026 – Aktualizácia č. 7 (aktuálna)</div>
+          <div class="tl-content">Aktuálne platné znenie. Podrobnosti v prílohe č. 9a na upsvr.gov.sk. Žiadosti stále aktívne, projekt prebieha.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panels -->
+
+<div class="footer-credit">
+  Spracovala: <strong style="color:#fff;">Ing. Jaroslava Guspanová</strong> · Košice ·
+  <a href="https://www.linkedin.com/in/jaroslava-guspanova/" target="_blank">LinkedIn profil</a>
+  &nbsp;|&nbsp; Dátum: 12. jún 2026 &nbsp;|&nbsp;
+  Zdroje: upsvr.gov.sk, slovensko.sk, employment.gov.sk · Pripravené ako názorný nástroj pre zamestnávateľov, nejde o právne záväzný dokument.
+</div>
+
+<script>
+// TAB SWITCHING
+const TAB_IDS = ['eligibility','finance','compare','parttime','process','rights','changelog'];
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', TAB_IDS[i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if(id === 'finance' && !window.chart1Built) buildChartMonthly();
+  if(id === 'compare' && !window.chart2Built) buildChartCompare();
+  if(id === 'parttime' && !window.chart3Built) buildChartsCross();
+}
+
+// CHART 1 – Monthly cost breakdown (Jaroslava full-time)
+function buildChartMonthly() {
+  window.chart1Built = true;
+  const months = Array.from({length:18},(_,i)=>(`Mes. ${i+1}`));
+  const contribution = Array.from({length:18},(_,i)=> i < 12 ? 1839 : 0);
+  const firmCost = Array.from({length:18},(_,i)=> i < 12 ? 460 : 2298);
+  new Chart(document.getElementById('chartMonthly'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Príspevok ÚPSVaR (€)', data: contribution,
+          backgroundColor: 'rgba(26,107,90,0.75)', borderRadius: 4 },
+        { label: 'Náklad firmy (€)', data: firmCost,
+          backgroundColor: 'rgba(14,31,56,0.85)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 10 } } },
+        y: { stacked: true, ticks: { callback: v => v + ' €', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// CHART 2 – Scenario comparison (groups within NP FSZ)
+function buildChartCompare() {
+  window.chart2Built = true;
+  new Chart(document.getElementById('chartCompare'), {
+    type: 'bar',
+    data: {
+      labels: ['Jaroslava\n(DNO 12 mes.)', 'Iný ZUoZ\n(3 mes.)', 'Mladý NEET\n(3 mes.)', 'Bežný\nuchádzač'],
+      datasets: [
+        { label: 'Príspevok ÚPSVaR (€)', data: [22065, 5516, 5516, 0],
+          backgroundColor: 'rgba(26,107,90,0.8)', borderRadius: 5 },
+        { label: 'Náklad firmy (€)', data: [19307, 35855, 35855, 41371],
+          backgroundColor: 'rgba(14,31,56,0.8)', borderRadius: 5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw.toLocaleString('sk') + ' €' } }
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { size: 10 } } },
+        y: { stacked: true,
+          max: 45000,
+          ticks: { callback: v => (v/1000) + 'k €', font: { size: 10 } },
+          grid: { color: 'rgba(200,212,232,0.5)' }
+        }
+      }
+    }
+  });
+}
+
+// CHART 3 + 4 – Part-time comparison: Jaroslava vs Student (monthly + cumulative line charts)
+function buildChartsCross() {
+  window.chart3Built = true;
+  const N = 42;
+  const months = Array.from({length:N},(_,i)=>i+1);
+
+  // Monthly costs
+  const monthlyJ = months.map(m => m <= 12 ? 229.84 : 1149.20);
+  const monthlyS = months.map(() => 828.00);
+
+  // Cumulative costs
+  let runJ = 0, runS = 0;
+  const cumJ = [], cumS = [];
+  months.forEach(m => {
+    runJ += monthlyJ[m-1];
+    runS += monthlyS[m-1];
+    cumJ.push(Math.round(runJ));
+    cumS.push(Math.round(runS));
+  });
+
+  // Chart A – monthly cost line
+  new Chart(document.getElementById('chartCrossMonthly'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Jaroslava – mes. náklad (€)', data: monthlyJ,
+          borderColor: 'rgba(26,107,90,1)', backgroundColor: 'rgba(26,107,90,0.08)',
+          borderWidth: 2.5, pointRadius: 0, stepped: true, fill: false },
+        { label: 'Študent – mes. náklad (€)', data: monthlyS,
+          borderColor: 'rgba(212,168,67,1)', backgroundColor: 'rgba(212,168,67,0.08)',
+          borderWidth: 2.5, pointRadius: 0, borderDash: [6,4], fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw.toLocaleString('sk') + ' €' } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Mesiac', font: { size: 10 } },
+             ticks: { font: { size: 9 }, maxTicksLimit: 14 } },
+        y: { title: { display: true, text: 'Mesačný náklad (€)', font: { size: 10 } },
+             ticks: { callback: v => v + ' €', font: { size: 10 } },
+             grid: { color: 'rgba(200,212,232,0.4)' } }
+      }
+    }
+  });
+
+  // Chart B – cumulative line
+  new Chart(document.getElementById('chartCrossCumulative'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Jaroslava – kumulatívne (€)', data: cumJ,
+          borderColor: 'rgba(26,107,90,1)', backgroundColor: 'rgba(26,107,90,0.10)',
+          borderWidth: 2.5, pointRadius: 0, fill: true, tension: 0.15 },
+        { label: 'Študent – kumulatívne (€)', data: cumS,
+          borderColor: 'rgba(212,168,67,1)', backgroundColor: 'rgba(212,168,67,0.10)',
+          borderWidth: 2.5, pointRadius: 0, fill: true, tension: 0.15 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw.toLocaleString('sk') + ' €' } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Mesiac', font: { size: 10 } },
+             ticks: { font: { size: 9 }, maxTicksLimit: 14 } },
+        y: { title: { display: true, text: 'Kumulatívne náklady (€)', font: { size: 10 } },
+             ticks: { callback: v => (v/1000).toFixed(0) + 'k €', font: { size: 10 } },
+             grid: { color: 'rgba(200,212,232,0.4)' } }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
